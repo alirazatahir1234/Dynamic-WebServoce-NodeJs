@@ -18,6 +18,26 @@ services:
       timeout: 10s
       retries: 5
 
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: dynamic-webservice-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: dynamic_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - dynamic-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
   # Node.js Application
   api:
     build:
@@ -26,6 +46,9 @@ services:
     container_name: dynamic-webservice-api
     environment:
       DATABASE_URL: mysql://root:rootpassword@mysql:3306/dynamic_webservice
+      DATABASE_TYPE: mysql
+      MONGODB_URL: mongodb://admin:password@mongodb:27017
+      MONGODB_DATABASE: dynamic_db
       NODE_ENV: production
       PORT: 3000
       LOG_LEVEL: debug
@@ -35,6 +58,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      mongodb:
+        condition: service_healthy
     networks:
       - dynamic-network
     volumes:
@@ -43,6 +68,7 @@ services:
 
 volumes:
   mysql_data:
+  mongodb_data:
 
 networks:
   dynamic-network:
