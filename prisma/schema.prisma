@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// METADATA MODELS - Define entity and field structures
+// ============================================================================
+
+/// EntityDefinition represents a table structure in the system
+model EntityDefinition {
+  id          Int                 @id @default(autoincrement())
+  entityName  String              @unique @db.VarChar(255)
+  displayName String              @db.VarChar(255)
+  tableName   String              @unique @db.VarChar(255)
+  description String?             @db.Text
+  isDeleted   Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  // Relations
+  fields      FieldDefinition[]
+  records     DynamicRecord[]
+
+  @@map("entity_definitions")
+  @@index([entityName])
+  @@index([isDeleted])
+}
+
+/// FieldDefinition represents a column structure for an entity
+model FieldDefinition {
+  id               Int                @id @default(autoincrement())
+  entityId         Int
+  fieldName        String             @db.VarChar(255)
+  displayName      String             @db.VarChar(255)
+  fieldType        String             @db.VarChar(50) // 'string', 'integer', 'decimal', 'datetime', 'boolean', 'enum'
+  isRequired       Boolean            @default(false)
+  isUnique         Boolean            @default(false)
+  maxLength        Int?
+  minLength        Int?
+  pattern          String?            @db.Text // Regex pattern for validation
+  defaultValue     String?            @db.Text
+  options          String?            @db.LongText // JSON array for enum options
+  displayOrder     Int                @default(0)
+  isDeleted        Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  // Relations
+  entity          EntityDefinition   @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@unique([entityId, fieldName])
+  @@map("field_definitions")
+  @@index([entityId])
+  @@index([isDeleted])
+}
+
+// ============================================================================
+// DYNAMIC RECORD STORAGE - Stores actual entity records
+// ============================================================================
+
+/// DynamicRecord is a flexible container for entity records
+model DynamicRecord {
+  id          String              @id @default(cuid())
+  entityId    Int
+  data        String              @db.LongText // JSON stringified data
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  isDeleted   Boolean             @default(false)
+
+  // Relations
+  entity      EntityDefinition    @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@map("dynamic_records")
+  @@index([entityId])
+  @@index([createdAt])
+  @@index([isDeleted])
+}
+
+// ============================================================================
+// AUDIT & LOGGING MODELS - Track changes
+// ============================================================================
+
+/// AuditLog tracks all modifications to entities
+model AuditLog {
+  id          Int                 @id @default(autoincrement())
+  entityName  String              @db.VarChar(255)
+  action      String              @db.VarChar(50) // 'CREATE', 'UPDATE', 'DELETE'
+  recordId    String              @db.Text
+  oldData     String?             @db.LongText
+  newData     String?             @db.LongText
+  userId      String?             @db.VarChar(255)
+  ipAddress   String?             @db.VarChar(45)
+  createdAt   DateTime            @default(now())
+
+  @@map("audit_logs")
+  @@index([entityName])
+  @@index([createdAt])
+}

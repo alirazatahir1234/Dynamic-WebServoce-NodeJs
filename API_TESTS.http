@@ -1,0 +1,361 @@
+### Dynamic Web Service API - Test Examples
+### Change request to http://localhost:3000/api{endpoint}
+
+### ============================================================================
+### HEALTH CHECK
+### ============================================================================
+
+### System Health
+GET http://localhost:3000/api/health
+
+
+### ============================================================================
+### METADATA MANAGEMENT - ENTITIES
+### ============================================================================
+
+### Get all entities
+GET http://localhost:3000/api/metadata/entities
+
+### Create new entity - Customer
+POST http://localhost:3000/api/metadata/entities
+Content-Type: application/json
+
+{
+  "entityName": "Customer",
+  "displayName": "Customers",
+  "tableName": "Customers",
+  "description": "Customer records management"
+}
+
+### Create new entity - Product
+POST http://localhost:3000/api/metadata/entities
+Content-Type: application/json
+
+{
+  "entityName": "Product",
+  "displayName": "Products",
+  "tableName": "Products",
+  "description": "Product inventory management"
+}
+
+### Get entity by ID (adjust ID as needed)
+GET http://localhost:3000/api/metadata/entities/1
+
+### Update entity
+PUT http://localhost:3000/api/metadata/entities/1
+Content-Type: application/json
+
+{
+  "displayName": "Customer Records",
+  "description": "Updated customer management system"
+}
+
+### Delete entity (soft delete)
+DELETE http://localhost:3000/api/metadata/entities/1
+
+
+### ============================================================================
+### METADATA MANAGEMENT - FIELDS
+### ============================================================================
+
+### Get fields for entity (Customer entity ID = 1)
+GET http://localhost:3000/api/metadata/entities/1/fields
+
+### Create field - firstName
+POST http://localhost:3000/api/metadata/fields
+Content-Type: application/json
+
+{
+  "entityId": 1,
+  "fieldName": "firstName",
+  "displayName": "First Name",
+  "fieldType": "string",
+  "isRequired": true,
+  "maxLength": 100,
+  "displayOrder": 1
+}
+
+### Create field - lastName
+POST http://localhost:3000/api/metadata/fields
+Content-Type: application/json
+
+{
+  "entityId": 1,
+  "fieldName": "lastName",
+  "displayName": "Last Name",
+  "fieldType": "string",
+  "isRequired": true,
+  "maxLength": 100,
+  "displayOrder": 2
+}
+
+### Create field - email (with pattern validation)
+POST http://localhost:3000/api/metadata/fields
+Content-Type: application/json
+
+{
+  "entityId": 1,
+  "fieldName": "email",
+  "displayName": "Email",
+  "fieldType": "string",
+  "isRequired": true,
+  "isUnique": true,
+  "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+  "displayOrder": 3
+}
+
+### Create field - phone
+POST http://localhost:3000/api/metadata/fields
+Content-Type: application/json
+
+{
+  "entityId": 1,
+  "fieldName": "phone",
+  "displayName": "Phone",
+  "fieldType": "string",
+  "isRequired": false,
+  "maxLength": 20,
+  "displayOrder": 4
+}
+
+### Create field - status (enum)
+POST http://localhost:3000/api/metadata/fields
+Content-Type: application/json
+
+{
+  "entityId": 1,
+  "fieldName": "status",
+  "displayName": "Status",
+  "fieldType": "enum",
+  "isRequired": true,
+  "options": "[{\"value\": \"active\", \"label\": \"Active\"}, {\"value\": \"inactive\", \"label\": \"Inactive\"}, {\"value\": \"suspended\", \"label\": \"Suspended\"}]",
+  "displayOrder": 5
+}
+
+### Update field
+PUT http://localhost:3000/api/metadata/fields/1
+Content-Type: application/json
+
+{
+  "displayName": "Customer First Name",
+  "maxLength": 150
+}
+
+### Delete field
+DELETE http://localhost:3000/api/metadata/fields/1
+
+
+### ============================================================================
+### DYNAMIC CRUD - OPERATIONS
+### ============================================================================
+
+### Get list of available entities
+GET http://localhost:3000/api/dynamic/entities
+
+### Get entity metadata/field definitions
+GET http://localhost:3000/api/dynamic/metadata/Customer
+
+### Get all Customer records (with pagination)
+GET http://localhost:3000/api/dynamic/Customer?page=1&pageSize=10
+
+### Get all Customer records (page 2)
+GET http://localhost:3000/api/dynamic/Customer?page=2&pageSize=10
+
+### Create Customer record
+POST http://localhost:3000/api/dynamic/Customer
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "phone": "+1-555-0100",
+  "status": "active"
+}
+
+### Create another Customer record
+POST http://localhost:3000/api/dynamic/Customer
+Content-Type: application/json
+
+{
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "email": "jane.smith@example.com",
+  "phone": "+1-555-0101",
+  "status": "active"
+}
+
+### Create Customer with minimal fields
+POST http://localhost:3000/api/dynamic/Customer
+Content-Type: application/json
+
+{
+  "firstName": "Bob",
+  "lastName": "Johnson",
+  "email": "bob.johnson@example.com",
+  "status": "inactive"
+}
+
+### Get Customer record by ID (replace ID with actual ID)
+GET http://localhost:3000/api/dynamic/Customer/clhxyz123abc
+
+### Update Customer record
+PUT http://localhost:3000/api/dynamic/Customer/clhxyz123abc
+Content-Type: application/json
+
+{
+  "firstName": "Jonathan",
+  "phone": "+1-555-0150"
+}
+
+### Delete Customer record (soft delete)
+DELETE http://localhost:3000/api/dynamic/Customer/clhxyz123abc
+
+
+### ============================================================================
+### LOOKUP DATA (For Dropdowns)
+### ============================================================================
+
+### Get lookup data for Customer (for dropdowns)
+GET http://localhost:3000/api/lookup/Customer
+
+### Get lookup data for Product
+GET http://localhost:3000/api/lookup/Product
+
+### Lookup service health
+GET http://localhost:3000/api/lookup/health
+
+
+### ============================================================================
+### ERROR HANDLING TESTS
+### ============================================================================
+
+### Test missing required field (should fail)
+POST http://localhost:3000/api/dynamic/Customer
+Content-Type: application/json
+
+{
+  "firstName": "Test",
+  "status": "active"
+}
+
+### Test invalid field type (should fail)
+POST http://localhost:3000/api/dynamic/Customer
+Content-Type: application/json
+
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "email": "invalid-email",
+  "status": "active"
+}
+
+### Test max length exceeded (should fail)
+POST http://localhost:3000/api/dynamic/Customer
+Content-Type: application/json
+
+{
+  "firstName": "John" + "John".repeat(30),
+  "lastName": "Doe",
+  "email": "john@example.com",
+  "status": "active"
+}
+
+### Test invalid enum value (should fail)
+POST http://localhost:3000/api/dynamic/Customer
+Content-Type: application/json
+
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "email": "test@example.com",
+  "status": "invalid_status"
+}
+
+### Test non-existent entity
+GET http://localhost:3000/api/dynamic/NonExistentEntity
+
+### Test non-existent record
+GET http://localhost:3000/api/dynamic/Customer/non-existent-id
+
+
+### ============================================================================
+### ADVANCED SCENARIOS
+### ============================================================================
+
+### Create Product Entity
+POST http://localhost:3000/api/metadata/entities
+Content-Type: application/json
+
+{
+  "entityName": "Product",
+  "displayName": "Products",
+  "tableName": "Products",
+  "description": "Product catalog"
+}
+
+### Add fields to Product
+POST http://localhost:3000/api/metadata/fields
+Content-Type: application/json
+
+{
+  "entityId": 2,
+  "fieldName": "productName",
+  "displayName": "Product Name",
+  "fieldType": "string",
+  "isRequired": true,
+  "maxLength": 255,
+  "displayOrder": 1
+}
+
+###
+POST http://localhost:3000/api/metadata/fields
+Content-Type: application/json
+
+{
+  "entityId": 2,
+  "fieldName": "price",
+  "displayName": "Price",
+  "fieldType": "decimal",
+  "isRequired": true,
+  "displayOrder": 2
+}
+
+###
+POST http://localhost:3000/api/metadata/fields
+Content-Type: application/json
+
+{
+  "entityId": 2,
+  "fieldName": "quantity",
+  "displayName": "Quantity in Stock",
+  "fieldType": "integer",
+  "isRequired": true,
+  "displayOrder": 3
+}
+
+### Create Product record
+POST http://localhost:3000/api/dynamic/Product
+Content-Type: application/json
+
+{
+  "productName": "Laptop",
+  "price": 999.99,
+  "quantity": 50
+}
+
+### Create another Product record
+POST http://localhost:3000/api/dynamic/Product
+Content-Type: application/json
+
+{
+  "productName": "Mouse",
+  "price": 29.99,
+  "quantity": 200
+}
+
+### Get all products
+GET http://localhost:3000/api/dynamic/Product
+
+### Get product lookup data (for dropdowns)
+GET http://localhost:3000/api/lookup/Product

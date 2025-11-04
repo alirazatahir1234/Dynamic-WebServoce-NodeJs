@@ -1,0 +1,49 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: dynamic-webservice-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: dynamic_webservice
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - dynamic-network
+    healthcheck:
+      test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-prootpassword", "-e", "SELECT 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  # Node.js Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dynamic-webservice-api
+    environment:
+      DATABASE_URL: mysql://root:rootpassword@mysql:3306/dynamic_webservice
+      NODE_ENV: production
+      PORT: 3000
+      LOG_LEVEL: debug
+      CORS_ORIGIN: http://localhost:3001,http://localhost:4200
+    ports:
+      - "3000:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - dynamic-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  dynamic-network:
+    driver: bridge
