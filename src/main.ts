@@ -3,7 +3,10 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './core/filters/http-exception.filter';
+import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 import { LoggerService } from './core/logger/logger.service';
+import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -49,6 +52,11 @@ async function bootstrap() {
 
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter(logger));
+  app.useGlobalFilters(new ValidationExceptionFilter());
+
+  // Global interceptors
+  app.useGlobalInterceptors(new LoggingInterceptor(logger));
+  app.useGlobalInterceptors(new TransformResponseInterceptor());
 
   // Swagger documentation
   const config = new DocumentBuilder()

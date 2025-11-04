@@ -3,7 +3,6 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '@/core/database/prisma.service';
 import { LoggerService } from '@/core/logger/logger.service';
 import { MetadataService } from '@/modules/metadata/metadata.service';
 import {
@@ -11,6 +10,11 @@ import {
   CreateDynamicRecordDto,
   PaginatedResponseDto,
 } from '@/common/dtos/dynamic.dto';
+import { FieldDefinitionDto } from '@/common/dtos/metadata.dto';
+import { DynamicMetadataReader } from './engine/metadata-reader.service';
+import { DynamicQueryBuilder } from './engine/query-builder.service';
+import { DynamicQueryExecutor } from './engine/query-executor.service';
+import { DynamicEntityContext } from './engine/query.types';
 
 /**
  * Service for dynamic CRUD operations on any entity
@@ -19,9 +23,11 @@ import {
 @Injectable()
 export class DynamicService {
   constructor(
-    private prisma: PrismaService,
-    private metadataService: MetadataService,
-    private logger: LoggerService,
+    private readonly metadataReader: DynamicMetadataReader,
+    private readonly queryBuilder: DynamicQueryBuilder,
+    private readonly queryExecutor: DynamicQueryExecutor,
+    private readonly metadataService: MetadataService,
+    private readonly logger: LoggerService,
   ) {}
 
   /**
@@ -36,30 +42,21 @@ export class DynamicService {
       `Fetching records for entity: ${entityName}, page: ${page}`,
       'DynamicService',
     );
-
-    // Get entity definition
-    const entity = await this.metadataService.getEntityByName(entityName);
+    const context = await this.metadataReader.getEntityContext(entityName);
 
     try {
-      const skip = (page - 1) * pageSize;
-
-      // Get records
       const [records, total] = await Promise.all([
-        this.prisma.dynamicRecord.findMany({
-          where: { entityId: entity.id, isDeleted: false },
-          skip,
-          take: pageSize,
-          orderBy: { createdAt: 'desc' },
-        }),
-        this.prisma.dynamicRecord.count({
-          where: { entityId: entity.id, isDeleted: false },
-        }),
+        this.queryExecutor.execute<any[]>(
+          this.queryBuilder.buildFindMany(context, { page, pageSize }),
+        ),
+        this.queryExecutor.execute<number>(
+          this.queryBuilder.buildCount(context),
+        ),
       ]);
 
-      const parsedRecords = records.map((r) => ({
-        ...r,
-        data: JSON.parse(r.data),
-      }));
+      const parsedRecords = records.map((record) =>
+        this.deserializeRecord(record),
+      );
 
       const totalPages = Math.ceil(total / pageSize);
 
@@ -97,11 +94,11 @@ export class DynamicService {
       'DynamicService',
     );
 
-    const entity = await this.metadataService.getEntityByName(entityName);
+    const context = await this.metadataReader.getEntityContext(entityName);
 
-    const record = await this.prisma.dynamicRecord.findFirst({
-      where: { id: recordId, entityId: entity.id, isDeleted: false },
-    });
+    const record = await this.queryExecutor.execute<any | null>(
+      this.queryBuilder.buildFindOne(context, recordId),
+    );
 
     if (!record) {
       throw new NotFoundException(
@@ -109,10 +106,7 @@ export class DynamicService {
       );
     }
 
-    return {
-      ...record,
-      data: JSON.parse(record.data),
-    };
+    return this.deserializeRecord(record);
   }
 
   /**
@@ -127,28 +121,22 @@ export class DynamicService {
       'DynamicService',
     );
 
-    const entity = await this.metadataService.getEntityByName(entityName);
+    const context = await this.metadataReader.getEntityContext(entityName);
 
     // Validate fields against entity metadata
-    await this.validateRecordData(entity.id, dto);
+    await this.validateRecordData(context, dto);
 
     try {
-      const record = await this.prisma.dynamicRecord.create({
-        data: {
-          entityId: entity.id,
-          data: JSON.stringify(dto),
-        },
-      });
+      const record = await this.queryExecutor.execute<any>(
+        this.queryBuilder.buildCreate(context, dto),
+      );
 
       this.logger.log(
         `✓ Record created in ${entityName}: ${record.id}`,
         'DynamicService',
       );
 
-      return {
-        ...record,
-        data: JSON.parse(record.data),
-      };
+      return this.deserializeRecord(record);
     } catch (error) {
       this.logger.error(
         `Error creating record in ${entityName}`,
@@ -172,32 +160,26 @@ export class DynamicService {
       'DynamicService',
     );
 
-    const entity = await this.metadataService.getEntityByName(entityName);
+    const context = await this.metadataReader.getEntityContext(entityName);
 
     // Get existing record
     const existing = await this.getRecordById(entityName, recordId);
 
     // Validate updated fields
     const mergedData = { ...existing.data, ...dto };
-    await this.validateRecordData(entity.id, mergedData);
+    await this.validateRecordData(context, mergedData);
 
     try {
-      const record = await this.prisma.dynamicRecord.update({
-        where: { id: recordId },
-        data: {
-          data: JSON.stringify(mergedData),
-        },
-      });
+      const record = await this.queryExecutor.execute<any>(
+        this.queryBuilder.buildUpdate(recordId, mergedData),
+      );
 
       this.logger.log(
         `✓ Record updated in ${entityName}: ${record.id}`,
         'DynamicService',
       );
 
-      return {
-        ...record,
-        data: JSON.parse(record.data),
-      };
+      return this.deserializeRecord(record);
     } catch (error) {
       this.logger.error(
         `Error updating record in ${entityName}`,
@@ -217,23 +199,12 @@ export class DynamicService {
       'DynamicService',
     );
 
-    const entity = await this.metadataService.getEntityByName(entityName);
-
-    const record = await this.prisma.dynamicRecord.findFirst({
-      where: { id: recordId, entityId: entity.id },
-    });
-
-    if (!record) {
-      throw new NotFoundException(
-        `Record ${recordId} not found in ${entityName}`,
-      );
-    }
+    await this.getRecordById(entityName, recordId);
 
     try {
-      await this.prisma.dynamicRecord.update({
-        where: { id: recordId },
-        data: { isDeleted: true },
-      });
+      await this.queryExecutor.execute(
+        this.queryBuilder.buildSoftDelete(recordId),
+      );
 
       this.logger.log(
         `✓ Record deleted from ${entityName}: ${recordId}`,
@@ -253,12 +224,10 @@ export class DynamicService {
    * Validate record data against field definitions
    */
   private async validateRecordData(
-    entityId: number,
+    context: DynamicEntityContext,
     data: Record<string, any>,
   ): Promise<void> {
-    const fields = await this.prisma.fieldDefinition.findMany({
-      where: { entityId, isDeleted: false },
-    });
+    const fields = context.fields;
 
     for (const field of fields) {
       const value = data[field.fieldName];
@@ -329,7 +298,7 @@ export class DynamicService {
       // Validate enum options
       if (field.fieldType === 'enum' && field.options) {
         try {
-          const options = JSON.parse(field.options);
+          const options = this.safeParseJson<any[]>(field.options) ?? [];
           const validValues = options.map((o: any) => o.value);
           if (!validValues.includes(value)) {
             throw new BadRequestException(
@@ -359,6 +328,30 @@ export class DynamicService {
    */
   async getEntityMetadata(entityName: string): Promise<any> {
     this.logger.debug(`Fetching metadata for ${entityName}`, 'DynamicService');
-    return this.metadataService.getEntityByName(entityName);
+    const context = await this.metadataReader.getEntityContext(entityName);
+    return context.entity;
+  }
+
+  private deserializeRecord(record: any): DynamicRecordDto {
+    return {
+      ...record,
+      data: this.safeParseJson<Record<string, unknown>>(record.data) ?? {},
+    };
+  }
+
+  private safeParseJson<T>(value: string | null | undefined): T | null {
+    if (!value) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(value) as T;
+    } catch (error) {
+      this.logger.warn(
+        'Failed to parse JSON payload for dynamic record',
+        'DynamicService',
+      );
+      return null;
+    }
   }
 }

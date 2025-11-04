@@ -106,10 +106,12 @@ export class DynamicController {
   })
   async getRecords(
     @Param('entity') entity: string,
-    @Query('page') page: number = 1,
-    @Query('pageSize') pageSize: number = 10,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
   ): Promise<PaginatedResponseDto<DynamicRecordDto>> {
-    return this.dynamicService.getRecords(entity, page, pageSize);
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const pageSizeNum = pageSize ? parseInt(pageSize, 10) : 10;
+    return this.dynamicService.getRecords(entity, pageNum, pageSizeNum);
   }
 
   /**
