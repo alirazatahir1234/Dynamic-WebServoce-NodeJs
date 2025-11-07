@@ -30,8 +30,8 @@ async function bootstrap() {
   // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
+      whitelist: false, // Don't whitelist - allow all properties for dynamic DTOs
+      forbidNonWhitelisted: false,
       transform: true,
       transformOptions: {
         enableImplicitConversion: true,
@@ -62,9 +62,18 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Dynamic Web Service API')
     .setDescription(
-      'Metadata-driven REST API for dynamic entity management. Node.js version of DynamicWebService .NET backend.',
+      'Metadata-driven REST API for dynamic entity management. Node.js version of DynamicWebService .NET backend. Supports CRUD operations on dynamic entities with flexible schema.',
     )
     .setVersion('1.0.0')
+    .setContact(
+      'DynamicWebService',
+      'https://github.com/alirazatahir1234',
+      'support@example.com',
+    )
+    .setLicense(
+      'MIT',
+      'https://opensource.org/licenses/MIT',
+    )
     .addTag('Metadata', 'Entity and Field definitions management')
     .addTag('Dynamic', 'CRUD operations for dynamic entities')
     .addTag('Lookup', 'Dropdown and reference data')
@@ -76,7 +85,13 @@ async function bootstrap() {
     swaggerOptions: {
       persistAuthorization: true,
       displayOperationId: true,
+      docExpansion: 'list',
+      filter: true,
+      showRequestHeaders: true,
+      supportedSubmitMethods: ['get', 'post', 'put', 'patch', 'delete'],
     },
+    customCss: `.swagger-ui .topbar { display: none }`,
+    customSiteTitle: 'Dynamic Web Service API Docs',
   });
 
   const port = process.env.PORT || 3000;

@@ -46,6 +46,24 @@ export class MetadataController {
   }
 
   /**
+   * Get all fields across all entities
+   */
+  @Get('fields')
+  @ApiOperation({
+    summary: 'Get all fields',
+    description: 'Retrieve all fields defined across all entities',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all fields',
+    type: [FieldDefinitionDto],
+  })
+  async getAllFields(): Promise<FieldDefinitionDto[]> {
+    return this.metadataService.getAllFields();
+  }
+
+
+  /**
    * Get entity by ID
    */
   @Get('entities/:id')
@@ -206,6 +224,7 @@ export class MetadataController {
     status: 409,
     description: 'Field already exists',
   })
+
   async createField(
     @Body() dto: CreateFieldDefinitionDto,
   ): Promise<FieldDefinitionDto> {

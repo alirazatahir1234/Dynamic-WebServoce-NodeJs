@@ -23,6 +23,7 @@ export class ValidationExceptionFilter implements ExceptionFilter {
         : exception.message;
 
     this.logger.warn(`Validation error: ${message}`);
+    console.error('VALIDATION ERROR DETAILS:', exception.message, exceptionResponse);
 
     response.status(status).json({
       success: false,

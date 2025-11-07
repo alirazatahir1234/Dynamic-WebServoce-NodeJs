@@ -1,0 +1,592 @@
+{
+  "info": {
+    "_postman_id": "dynamic-webservice-api",
+    "name": "Dynamic Web Service API",
+    "description": "Metadata-driven REST API for dynamic entity management. Node.js version of DynamicWebService .NET backend. Supports CRUD operations on dynamic entities with flexible schema.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0",
+    "_exporter_id": "12345",
+    "contact": {
+      "name": "DynamicWebService Support",
+      "url": "https://github.com/alirazatahir1234"
+    }
+  },
+  "item": [
+    {
+      "name": "Health & System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Check API health status"
+          },
+          "response": []
+        },
+        {
+          "name": "Lookup Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/lookup/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "lookup",
+                "health"
+              ]
+            },
+            "description": "Check lookup service health"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Metadata - Entities",
+      "item": [
+        {
+          "name": "Get All Entities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metadata/entities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "metadata",
+                "entities"
+              ]
+            },
+            "description": "Get all entity definitions"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Entity By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metadata/entities/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "metadata",
+                "entities",
+                "1"
+              ]
+            },
+            "description": "Get a specific entity definition by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Entity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entityName\": \"Order\",\n  \"displayName\": \"Orders\",\n  \"tableName\": \"Orders\",\n  \"description\": \"Customer orders management\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metadata/entities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "metadata",
+                "entities"
+              ]
+            },
+            "description": "Create a new entity definition"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Entity",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Order Management\",\n  \"description\": \"Updated description for orders\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metadata/entities/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "metadata",
+                "entities",
+                "1"
+              ]
+            },
+            "description": "Update an entity definition"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Entity",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/metadata/entities/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "metadata",
+                "entities",
+                "1"
+              ]
+            },
+            "description": "Delete an entity definition"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Metadata - Fields",
+      "item": [
+        {
+          "name": "Get Entity Fields",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/metadata/entities/1/fields",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "metadata",
+                "entities",
+                "1",
+                "fields"
+              ]
+            },
+            "description": "Get all fields for a specific entity"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Field",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entityId\": 1,\n  \"fieldName\": \"orderDate\",\n  \"displayName\": \"Order Date\",\n  \"fieldType\": \"datetime\",\n  \"isRequired\": true,\n  \"displayOrder\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metadata/fields",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "metadata",
+                "fields"
+              ]
+            },
+            "description": "Create a new field definition"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Field",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Order Date Updated\",\n  \"isRequired\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/metadata/fields/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "metadata",
+                "fields",
+                "1"
+              ]
+            },
+            "description": "Update a field definition"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Field",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/metadata/fields/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "metadata",
+                "fields",
+                "1"
+              ]
+            },
+            "description": "Delete a field definition"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dynamic Data - CRUD",
+      "item": [
+        {
+          "name": "List All Entities (Dynamic)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dynamic/entities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dynamic",
+                "entities"
+              ]
+            },
+            "description": "List all available dynamic entities"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Entity Metadata",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dynamic/metadata/Customer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dynamic",
+                "metadata",
+                "Customer"
+              ]
+            },
+            "description": "Get metadata for a specific dynamic entity"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Records (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dynamic/Customer?page=1&pageSize=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dynamic",
+                "Customer"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Get all records of an entity with pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Record",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dynamic/Customer/cmhl2gmgi0001tqmhbccbo06j",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dynamic",
+                "Customer",
+                "cmhl2gmgi0001tqmhbccbo06j"
+              ]
+            },
+            "description": "Get a single record by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Williams\",\n  \"email\": \"alice.williams@example.com\",\n  \"phone\": \"+1-555-0103\",\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/dynamic/Customer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dynamic",
+                "Customer"
+              ]
+            },
+            "description": "Create a new record in an entity"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Record",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe Updated\",\n  \"email\": \"john.doe.updated@example.com\",\n  \"status\": \"inactive\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/dynamic/Customer/cmhl2gmgi0001tqmhbccbo06j",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dynamic",
+                "Customer",
+                "cmhl2gmgi0001tqmhbccbo06j"
+              ]
+            },
+            "description": "Update an existing record"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Record",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/dynamic/Customer/cmhl2gmgi0001tqmhbccbo06j",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "dynamic",
+                "Customer",
+                "cmhl2gmgi0001tqmhbccbo06j"
+              ]
+            },
+            "description": "Delete a record (soft delete)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Lookup Data",
+      "item": [
+        {
+          "name": "Get Lookup Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/lookup/Customer",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "lookup",
+                "Customer"
+              ]
+            },
+            "description": "Get lookup/dropdown data for an entity (simplified format)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Lookup Data - Product",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/lookup/Product",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "lookup",
+                "Product"
+              ]
+            },
+            "description": "Get lookup data for Product entity"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string",
+      "description": "Base URL for the API"
+    }
+  ]
+}

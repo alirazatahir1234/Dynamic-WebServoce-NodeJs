@@ -117,18 +117,38 @@ export class DynamicService {
     dto: CreateDynamicRecordDto,
   ): Promise<DynamicRecordDto> {
     this.logger.debug(
-      `Creating record in ${entityName}`,
+      `Creating record in ${entityName} with payload: ${JSON.stringify(dto)}`,
       'DynamicService',
     );
 
     const context = await this.metadataReader.getEntityContext(entityName);
 
+    // Log metadata for debugging
+    this.logger.debug(
+      `Entity metadata fields: ${context.fields.map(f => f.fieldName).join(', ')}`,
+      'DynamicService',
+    );
+
     // Validate fields against entity metadata
     await this.validateRecordData(context, dto);
 
+    // Normalize field names to match metadata (lowercase)
+    const normalizedPayload: Record<string, any> = {};
+    for (const [key, value] of Object.entries(dto)) {
+      const matchingField = context.fields.find(f => f.fieldName.toLowerCase() === key.toLowerCase());
+      if (matchingField) {
+        normalizedPayload[matchingField.fieldName] = value;
+      }
+    }
+
+    this.logger.debug(
+      `Normalized payload: ${JSON.stringify(normalizedPayload)}`,
+      'DynamicService',
+    );
+
     try {
       const record = await this.queryExecutor.execute<any>(
-        this.queryBuilder.buildCreate(context, dto),
+        this.queryBuilder.buildCreate(context, normalizedPayload),
       );
 
       this.logger.log(
@@ -222,15 +242,26 @@ export class DynamicService {
 
   /**
    * Validate record data against field definitions
+   * Case-insensitive field matching for user-friendly API
    */
   private async validateRecordData(
     context: DynamicEntityContext,
     data: Record<string, any>,
   ): Promise<void> {
     const fields = context.fields;
+    
+    // Create a lowercase map for case-insensitive lookups
+    const fieldMap = new Map(fields.map(f => [f.fieldName.toLowerCase(), f]));
+    
+    // Create a normalized data object (lowercase keys)
+    const normalizedData: Record<string, any> = {};
+    for (const [key, value] of Object.entries(data)) {
+      normalizedData[key.toLowerCase()] = value;
+    }
 
     for (const field of fields) {
-      const value = data[field.fieldName];
+      const fieldKeyLower = field.fieldName.toLowerCase();
+      const value = normalizedData[fieldKeyLower];
 
       // Check required fields
       if (field.isRequired && (value === null || value === undefined || value === '')) {

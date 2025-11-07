@@ -236,6 +236,23 @@ export class MetadataService {
   }
 
   /**
+   * Get all fields across all entities
+   */
+  async getAllFields(): Promise<FieldDefinitionDto[]> {
+    this.logger.debug(`Fetching all fields`, 'MetadataService');
+
+    const fields = await this.prisma.fieldDefinition.findMany({
+      where: { isDeleted: false },
+      orderBy: [
+        { entityId: 'asc' },
+        { displayOrder: 'asc' },
+      ],
+    });
+
+    return fields;
+  }
+
+  /**
    * Create field definition
    */
   async createField(
